@@ -3,6 +3,7 @@ package com.flow.service;
 import com.flow.dto.ExtensionResponse;
 import com.flow.dto.ExtensionResponse.CustomExtensionDto;
 import com.flow.dto.ExtensionResponse.FixedExtensionDto;
+import com.flow.exception.ExtensionException;
 import com.flow.repository.CustomExtensionRepository;
 import com.flow.repository.FixedExtensionRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +33,11 @@ public class ExtensionService {
                 .toList();
 
         return new ExtensionResponse(fixed, custom);
+    }
+
+    public void toggleFixed(String name, boolean blocked) {
+        fixedExtensionRepository.findById(name)
+                .orElseThrow(() -> new ExtensionException("존재하지 않는 고정 확장자입니다: " + name))
+                .updateBlocked(blocked);
     }
 }
