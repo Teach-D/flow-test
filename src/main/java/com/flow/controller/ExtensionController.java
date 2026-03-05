@@ -33,4 +33,9 @@ public class ExtensionController {
     public ResponseEntity<ExtensionResponse> addCustom(@RequestBody @Valid CustomExtensionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(extensionService.addCustom(request.getName()));
     }
+
+    @DeleteMapping("/custom/{id}")
+    public ResponseEntity<ExtensionResponse> deleteCustom(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(extensionService.deleteCustom(id));
+    }
 }

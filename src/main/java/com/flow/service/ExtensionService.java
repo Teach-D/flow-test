@@ -56,4 +56,12 @@ public class ExtensionService {
         customExtensionRepository.save(new CustomExtension(name));
         return getAll();
     }
+
+    public ExtensionResponse deleteCustom(Long id) {
+        if (!customExtensionRepository.existsById(id)) {
+            throw new ExtensionException("존재하지 않는 커스텀 확장자입니다.");
+        }
+        customExtensionRepository.deleteById(id);
+        return getAll();
+    }
 }
