@@ -51,7 +51,7 @@
         <div class="section" id="custom-section">
             <div class="section-title">커스텀 확장자</div>
             <div class="custom-input-row">
-                <input type="text" id="custom-input" placeholder="확장자 입력 (예: pdf)" maxlength="20">
+                <input type="text" id="custom-input" placeholder="확장자 입력 (예: pdf)">
                 <button id="add-btn">추가</button>
             </div>
             <div class="input-msg" id="input-msg"></div>
@@ -118,6 +118,14 @@
         function addCustom() {
             const name = $('#custom-input').val().trim();
             if (!name) return;
+            if (name.length > 20) {
+                showMsg('최대 20자까지 입력 가능합니다.', 'error');
+                return;
+            }
+            if (/^\d+$/.test(name)) {
+                showMsg('숫자만 입력할 수 없습니다.', 'error');
+                return;
+            }
 
             $.ajax({
                 url: '/extensions/custom',
@@ -176,10 +184,10 @@
 
         $('#custom-input').on('input', function() {
             const val = $(this).val();
-            if (/^\d+$/.test(val)) {
-                showMsg('숫자만 입력할 수 없습니다.', 'error');
-            } else if (val.length >= 20) {
+            if (val.length > 20) {
                 showMsg('최대 20자까지 입력 가능합니다.', 'error');
+            } else if (/^\d+$/.test(val)) {
+                showMsg('숫자만 입력할 수 없습니다.', 'error');
             } else {
                 clearMsg();
             }
