@@ -11,6 +11,9 @@
         h1 { font-size: 22px; margin-bottom: 32px; color: #333; }
         .section { margin-bottom: 32px; }
         .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #555; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .fixed-list { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+        .fixed-item { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+        .fixed-item input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
     </style>
 </head>
 <body>
@@ -18,11 +21,45 @@
         <h1>파일 확장자 차단</h1>
         <div class="section" id="fixed-section">
             <div class="section-title">고정 확장자</div>
+            <div class="fixed-list" id="fixed-list"></div>
         </div>
         <div class="section" id="custom-section">
             <div class="section-title">커스텀 확장자</div>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        function loadExtensions() {
+            $.get('/extensions', function(data) {
+                renderFixed(data.fixed);
+            });
+        }
+
+        function renderFixed(fixedList) {
+            const $list = $('#fixed-list');
+            $list.empty();
+            fixedList.forEach(function(ext) {
+                const $item = $('<div class="fixed-item">');
+                const $checkbox = $('<input type="checkbox">').prop('checked', ext.blocked).attr('id', 'fixed-' + ext.name);
+                const $label = $('<label>').attr('for', 'fixed-' + ext.name).text(ext.name);
+                $checkbox.on('change', function() {
+                    toggleFixed(ext.name, this.checked);
+                });
+                $item.append($checkbox, $label);
+                $list.append($item);
+            });
+        }
+
+        function toggleFixed(name, blocked) {
+            $.ajax({
+                url: '/extensions/fixed/' + name,
+                method: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify({ blocked: blocked })
+            });
+        }
+
+        loadExtensions();
+    </script>
 </body>
 </html>
