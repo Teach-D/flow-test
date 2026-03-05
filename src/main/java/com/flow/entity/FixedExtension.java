@@ -3,7 +3,6 @@ package com.flow.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
@@ -20,5 +19,9 @@ public class FixedExtension {
     public FixedExtension(String name) {
         this.name = name;
         this.blocked = false;
+    }
+
+    public void updateBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 }
