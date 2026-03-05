@@ -14,6 +14,14 @@
         .fixed-list { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
         .fixed-item { display: flex; align-items: center; gap: 6px; font-size: 14px; }
         .fixed-item input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
+        .custom-input-row { display: flex; gap: 8px; margin-top: 12px; }
+        .custom-input-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .custom-input-row button { padding: 8px 16px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .custom-input-row button:hover { background: #357abd; }
+        .custom-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; max-height: 200px; overflow-y: auto; }
+        .tag { display: flex; align-items: center; gap: 6px; background: #f0f0f0; border-radius: 4px; padding: 4px 10px; font-size: 13px; }
+        .tag button { background: none; border: none; cursor: pointer; color: #999; font-size: 16px; line-height: 1; padding: 0; }
+        .tag button:hover { color: #e74c3c; }
     </style>
 </head>
 <body>
@@ -25,6 +33,11 @@
         </div>
         <div class="section" id="custom-section">
             <div class="section-title">커스텀 확장자</div>
+            <div class="custom-input-row">
+                <input type="text" id="custom-input" placeholder="확장자 입력 (예: pdf)" maxlength="20">
+                <button id="add-btn">추가</button>
+            </div>
+            <div class="custom-tags" id="custom-tags"></div>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -32,6 +45,22 @@
         function loadExtensions() {
             $.get('/extensions', function(data) {
                 renderFixed(data.fixed);
+                renderCustom(data.custom);
+            });
+        }
+
+        function renderCustom(customList) {
+            const $tags = $('#custom-tags');
+            $tags.empty();
+            customList.forEach(function(ext) {
+                const $tag = $('<div class="tag">');
+                const $name = $('<span>').text(ext.name);
+                const $btn = $('<button>').html('&times;');
+                $btn.on('click', function() {
+                    deleteCustom(ext.id);
+                });
+                $tag.append($name, $btn);
+                $tags.append($tag);
             });
         }
 
@@ -58,6 +87,42 @@
                 data: JSON.stringify({ blocked: blocked })
             });
         }
+
+        function addCustom() {
+            const name = $('#custom-input').val().trim();
+            if (!name) return;
+
+            $.ajax({
+                url: '/extensions/custom',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name }),
+                success: function(data) {
+                    $('#custom-input').val('');
+                    renderFixed(data.fixed);
+                    renderCustom(data.custom);
+                }
+            });
+        }
+
+        function deleteCustom(id) {
+            $.ajax({
+                url: '/extensions/custom/' + id,
+                method: 'DELETE',
+                success: function(data) {
+                    renderFixed(data.fixed);
+                    renderCustom(data.custom);
+                }
+            });
+        }
+
+        $('#add-btn').on('click', function() {
+            addCustom();
+        });
+
+        $('#custom-input').on('keydown', function(e) {
+            if (e.key === 'Enter') addCustom();
+        });
 
         loadExtensions();
     </script>
