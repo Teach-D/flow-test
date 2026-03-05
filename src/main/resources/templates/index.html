@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 확장자 차단</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 40px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { font-size: 22px; margin-bottom: 32px; color: #333; }
+        .section { margin-bottom: 32px; }
+        .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #555; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .fixed-list { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+        .fixed-item { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+        .fixed-item input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
+        .custom-input-row { display: flex; gap: 8px; margin-top: 12px; }
+        .custom-input-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .custom-input-row button { padding: 8px 16px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .custom-input-row button:hover { background: #357abd; }
+        .custom-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; max-height: 200px; overflow-y: auto; }
+        .tag { display: flex; align-items: center; gap: 6px; background: #f0f0f0; border-radius: 4px; padding: 4px 10px; font-size: 13px; }
+        .tag button { background: none; border: none; cursor: pointer; color: #999; font-size: 16px; line-height: 1; padding: 0; }
+        .tag button:hover { color: #e74c3c; }
+        .input-msg { font-size: 12px; margin-top: 6px; min-height: 18px; }
+        .input-msg.error { color: #e74c3c; }
+        .input-msg.success { color: #27ae60; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #fff; border-radius: 8px; padding: 28px 32px; max-width: 360px; width: 90%; text-align: center; }
+        .modal h2 { font-size: 17px; margin-bottom: 12px; color: #e74c3c; }
+        .modal p { font-size: 14px; color: #555; margin-bottom: 20px; }
+        .modal button { padding: 8px 24px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .modal button:hover { background: #357abd; }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay" id="error-modal">
+        <div class="modal">
+            <h2>오류 발생</h2>
+            <p id="modal-msg">서버와 통신 중 문제가 발생했습니다.</p>
+            <button id="modal-close">확인</button>
+        </div>
+    </div>
+    <div class="container">
+        <h1>파일 확장자 차단</h1>
+        <div class="section" id="fixed-section">
+            <div class="section-title">고정 확장자</div>
+            <div class="fixed-list" id="fixed-list"></div>
+        </div>
+        <div class="section" id="custom-section">
+            <div class="section-title">커스텀 확장자</div>
+            <div class="custom-input-row">
+                <input type="text" id="custom-input" placeholder="확장자 입력 (예: pdf)" maxlength="20">
+                <button id="add-btn">추가</button>
+            </div>
+            <div class="input-msg" id="input-msg"></div>
+            <div class="custom-tags" id="custom-tags"></div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        function loadExtensions() {
+            $.get('/extensions')
+                .done(function(data) {
+                    renderFixed(data.fixed);
+                    renderCustom(data.custom);
+                })
+                .fail(function() {
+                    showModal('확장자 목록을 불러오는 데 실패했습니다.');
+                });
+        }
+
+        function renderCustom(customList) {
+            const $tags = $('#custom-tags');
+            $tags.empty();
+            customList.forEach(function(ext) {
+                const $tag = $('<div class="tag">');
+                const $name = $('<span>').text(ext.name);
+                const $btn = $('<button>').html('&times;');
+                $btn.on('click', function() {
+                    deleteCustom(ext.id);
+                });
+                $tag.append($name, $btn);
+                $tags.append($tag);
+            });
+        }
+
+        function renderFixed(fixedList) {
+            const $list = $('#fixed-list');
+            $list.empty();
+            fixedList.forEach(function(ext) {
+                const $item = $('<div class="fixed-item">');
+                const $checkbox = $('<input type="checkbox">').prop('checked', ext.blocked).attr('id', 'fixed-' + ext.name);
+                const $label = $('<label>').attr('for', 'fixed-' + ext.name).text(ext.name);
+                $checkbox.on('change', function() {
+                    toggleFixed(ext.name, this.checked);
+                });
+                $item.append($checkbox, $label);
+                $list.append($item);
+            });
+        }
+
+        function toggleFixed(name, blocked) {
+            $.ajax({
+                url: '/extensions/fixed/' + name,
+                method: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify({ blocked: blocked }),
+                error: function(xhr) {
+                    if (xhr.status >= 500 || xhr.status === 0) {
+                        showModal();
+                    }
+                }
+            });
+        }
+
+        function addCustom() {
+            const name = $('#custom-input').val().trim();
+            if (!name) return;
+
+            $.ajax({
+                url: '/extensions/custom',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name }),
+                success: function(data) {
+                    $('#custom-input').val('');
+                    clearMsg();
+                    renderFixed(data.fixed);
+                    renderCustom(data.custom);
+                },
+                error: function(xhr) {
+                    if (xhr.status >= 500 || xhr.status === 0) {
+                        showModal();
+                    } else {
+                        const msg = xhr.responseJSON?.message || '추가에 실패했습니다.';
+                        showMsg(msg, 'error');
+                    }
+                }
+            });
+        }
+
+        function deleteCustom(id) {
+            $.ajax({
+                url: '/extensions/custom/' + id,
+                method: 'DELETE',
+                success: function(data) {
+                    renderFixed(data.fixed);
+                    renderCustom(data.custom);
+                },
+                error: function(xhr) {
+                    if (xhr.status >= 500 || xhr.status === 0) {
+                        showModal();
+                    }
+                }
+            });
+        }
+
+        function showModal(msg) {
+            $('#modal-msg').text(msg || '서버와 통신 중 문제가 발생했습니다.');
+            $('#error-modal').addClass('active');
+        }
+
+        $('#modal-close').on('click', function() {
+            $('#error-modal').removeClass('active');
+        });
+
+        function showMsg(msg, type) {
+            $('#input-msg').text(msg).removeClass('error success').addClass(type);
+        }
+
+        function clearMsg() {
+            $('#input-msg').text('').removeClass('error success');
+        }
+
+        $('#custom-input').on('input', function() {
+            const val = $(this).val();
+            if (/^\d+$/.test(val)) {
+                showMsg('숫자만 입력할 수 없습니다.', 'error');
+            } else if (val.length >= 20) {
+                showMsg('최대 20자까지 입력 가능합니다.', 'error');
+            } else {
+                clearMsg();
+            }
+        });
+
+        $('#add-btn').on('click', function() {
+            addCustom();
+        });
+
+        $('#custom-input').on('keydown', function(e) {
+            if (e.key === 'Enter') addCustom();
+        });
+
+        loadExtensions();
+    </script>
+</body>
+</html>
