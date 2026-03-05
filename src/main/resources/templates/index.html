@@ -25,9 +25,23 @@
         .input-msg { font-size: 12px; margin-top: 6px; min-height: 18px; }
         .input-msg.error { color: #e74c3c; }
         .input-msg.success { color: #27ae60; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #fff; border-radius: 8px; padding: 28px 32px; max-width: 360px; width: 90%; text-align: center; }
+        .modal h2 { font-size: 17px; margin-bottom: 12px; color: #e74c3c; }
+        .modal p { font-size: 14px; color: #555; margin-bottom: 20px; }
+        .modal button { padding: 8px 24px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .modal button:hover { background: #357abd; }
     </style>
 </head>
 <body>
+    <div class="modal-overlay" id="error-modal">
+        <div class="modal">
+            <h2>오류 발생</h2>
+            <p id="modal-msg">서버와 통신 중 문제가 발생했습니다.</p>
+            <button id="modal-close">확인</button>
+        </div>
+    </div>
     <div class="container">
         <h1>파일 확장자 차단</h1>
         <div class="section" id="fixed-section">
@@ -47,10 +61,14 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
         function loadExtensions() {
-            $.get('/extensions', function(data) {
-                renderFixed(data.fixed);
-                renderCustom(data.custom);
-            });
+            $.get('/extensions')
+                .done(function(data) {
+                    renderFixed(data.fixed);
+                    renderCustom(data.custom);
+                })
+                .fail(function() {
+                    showModal('확장자 목록을 불러오는 데 실패했습니다.');
+                });
         }
 
         function renderCustom(customList) {
@@ -88,7 +106,12 @@
                 url: '/extensions/fixed/' + name,
                 method: 'PATCH',
                 contentType: 'application/json',
-                data: JSON.stringify({ blocked: blocked })
+                data: JSON.stringify({ blocked: blocked }),
+                error: function(xhr) {
+                    if (xhr.status >= 500 || xhr.status === 0) {
+                        showModal();
+                    }
+                }
             });
         }
 
@@ -108,8 +131,12 @@
                     renderCustom(data.custom);
                 },
                 error: function(xhr) {
-                    const msg = xhr.responseJSON?.message || '추가에 실패했습니다.';
-                    showMsg(msg, 'error');
+                    if (xhr.status >= 500 || xhr.status === 0) {
+                        showModal();
+                    } else {
+                        const msg = xhr.responseJSON?.message || '추가에 실패했습니다.';
+                        showMsg(msg, 'error');
+                    }
                 }
             });
         }
@@ -121,9 +148,23 @@
                 success: function(data) {
                     renderFixed(data.fixed);
                     renderCustom(data.custom);
+                },
+                error: function(xhr) {
+                    if (xhr.status >= 500 || xhr.status === 0) {
+                        showModal();
+                    }
                 }
             });
         }
+
+        function showModal(msg) {
+            $('#modal-msg').text(msg || '서버와 통신 중 문제가 발생했습니다.');
+            $('#error-modal').addClass('active');
+        }
+
+        $('#modal-close').on('click', function() {
+            $('#error-modal').removeClass('active');
+        });
 
         function showMsg(msg, type) {
             $('#input-msg').text(msg).removeClass('error success').addClass(type);
