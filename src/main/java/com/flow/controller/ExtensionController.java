@@ -1,8 +1,10 @@
 package com.flow.controller;
 
+import com.flow.dto.CustomExtensionRequest;
 import com.flow.dto.ExtensionResponse;
 import com.flow.dto.FixedExtensionToggleRequest;
 import com.flow.service.ExtensionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,5 +27,10 @@ public class ExtensionController {
                                             @RequestBody FixedExtensionToggleRequest request) {
         extensionService.toggleFixed(name, request.isBlocked());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PostMapping("/custom")
+    public ResponseEntity<ExtensionResponse> addCustom(@RequestBody @Valid CustomExtensionRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(extensionService.addCustom(request.getName()));
     }
 }
