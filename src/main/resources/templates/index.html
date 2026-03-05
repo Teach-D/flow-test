@@ -22,6 +22,9 @@
         .tag { display: flex; align-items: center; gap: 6px; background: #f0f0f0; border-radius: 4px; padding: 4px 10px; font-size: 13px; }
         .tag button { background: none; border: none; cursor: pointer; color: #999; font-size: 16px; line-height: 1; padding: 0; }
         .tag button:hover { color: #e74c3c; }
+        .input-msg { font-size: 12px; margin-top: 6px; min-height: 18px; }
+        .input-msg.error { color: #e74c3c; }
+        .input-msg.success { color: #27ae60; }
     </style>
 </head>
 <body>
@@ -37,6 +40,7 @@
                 <input type="text" id="custom-input" placeholder="확장자 입력 (예: pdf)" maxlength="20">
                 <button id="add-btn">추가</button>
             </div>
+            <div class="input-msg" id="input-msg"></div>
             <div class="custom-tags" id="custom-tags"></div>
         </div>
     </div>
@@ -99,8 +103,13 @@
                 data: JSON.stringify({ name: name }),
                 success: function(data) {
                     $('#custom-input').val('');
+                    clearMsg();
                     renderFixed(data.fixed);
                     renderCustom(data.custom);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || '추가에 실패했습니다.';
+                    showMsg(msg, 'error');
                 }
             });
         }
@@ -115,6 +124,25 @@
                 }
             });
         }
+
+        function showMsg(msg, type) {
+            $('#input-msg').text(msg).removeClass('error success').addClass(type);
+        }
+
+        function clearMsg() {
+            $('#input-msg').text('').removeClass('error success');
+        }
+
+        $('#custom-input').on('input', function() {
+            const val = $(this).val();
+            if (/^\d+$/.test(val)) {
+                showMsg('숫자만 입력할 수 없습니다.', 'error');
+            } else if (val.length >= 20) {
+                showMsg('최대 20자까지 입력 가능합니다.', 'error');
+            } else {
+                clearMsg();
+            }
+        });
 
         $('#add-btn').on('click', function() {
             addCustom();
