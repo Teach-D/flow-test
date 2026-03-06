@@ -44,7 +44,7 @@ public class ExtensionService {
     }
 
     public ExtensionResponse addCustom(String rawName) {
-        String name = rawName.trim().toLowerCase();
+        String name = rawName.trim();
 
         long count = customExtensionRepository.findAllWithLock().size();
         if (count >= 200) {
