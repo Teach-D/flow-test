@@ -23,10 +23,9 @@ public class ExtensionController {
     }
 
     @PatchMapping("/fixed/{name}")
-    public ResponseEntity<Void> toggleFixed(@PathVariable String name,
-                                            @RequestBody FixedExtensionToggleRequest request) {
-        extensionService.toggleFixed(name, request.isBlocked());
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    public ResponseEntity<ExtensionResponse> toggleFixed(@PathVariable String name,
+                                                         @RequestBody FixedExtensionToggleRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(extensionService.toggleFixed(name, request.isBlocked()));
     }
 
     @PostMapping("/custom")
