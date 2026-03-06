@@ -107,6 +107,10 @@
                 method: 'PATCH',
                 contentType: 'application/json',
                 data: JSON.stringify({ blocked: blocked }),
+                success: function(data) {
+                    renderFixed(data.fixed);
+                    renderCustom(data.custom);
+                },
                 error: function(xhr) {
                     if (xhr.status >= 500 || xhr.status === 0) {
                         showModal();

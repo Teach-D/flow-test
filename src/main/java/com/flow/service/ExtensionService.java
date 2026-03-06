@@ -36,10 +36,11 @@ public class ExtensionService {
         return new ExtensionResponse(fixed, custom);
     }
 
-    public void toggleFixed(String name, boolean blocked) {
+    public ExtensionResponse toggleFixed(String name, boolean blocked) {
         fixedExtensionRepository.findById(name)
                 .orElseThrow(() -> new ExtensionException("존재하지 않는 고정 확장자입니다: " + name))
                 .updateBlocked(blocked);
+        return getAll();
     }
 
     public ExtensionResponse addCustom(String rawName) {
