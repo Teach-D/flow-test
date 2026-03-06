@@ -18,6 +18,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Write application.yml
+        run: echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -50,7 +53,4 @@ jobs:
             docker run -d \
               --name flow \
               -p 8080:8080 \
-              -e DB_URL="${{ secrets.DB_URL }}" \
-              -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
-              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               ${{ secrets.DOCKER_USERNAME }}/flow:latest
