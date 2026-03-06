@@ -59,10 +59,10 @@ public class ExtensionService {
     }
 
     public ExtensionResponse deleteCustom(Long id) {
-        if (!customExtensionRepository.existsById(id)) {
+        int deleted = customExtensionRepository.deleteByIdIfExists(id);
+        if (deleted == 0) {
             throw new ExtensionException("존재하지 않는 커스텀 확장자입니다.");
         }
-        customExtensionRepository.deleteById(id);
         return getAll();
     }
 }
