@@ -45,7 +45,8 @@ public class ExtensionService {
     public ExtensionResponse addCustom(String rawName) {
         String name = rawName.trim().toLowerCase();
 
-        if (customExtensionRepository.count() >= 200) {
+        long count = customExtensionRepository.findAllWithLock().size();
+        if (count >= 200) {
             throw new ExtensionException("커스텀 확장자는 최대 200개까지 추가 가능합니다.");
         }
 
