@@ -51,6 +51,10 @@ public class ExtensionService {
             throw new ExtensionException("커스텀 확장자는 최대 200개까지 추가 가능합니다.");
         }
 
+        if (fixedExtensionRepository.existsById(name)) {
+            throw new ExtensionException("고정 확장자에 이미 존재하는 확장자입니다: " + name);
+        }
+
         if (customExtensionRepository.existsByName(name)) {
             throw new ExtensionException("이미 추가된 확장자입니다: " + name);
         }
