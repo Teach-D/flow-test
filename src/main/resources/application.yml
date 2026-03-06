@@ -1,13 +1,13 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/flowdb?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USERNAME:root}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/flowdb}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:1234}
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
 
 springdoc:

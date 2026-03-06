@@ -18,7 +18,7 @@ public class CustomExtension {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20, columnDefinition = "VARCHAR(20) COLLATE utf8mb4_bin")
+    @Column(nullable = false, unique = true, length = 20)
     private String name;
 
     @CreatedDate
